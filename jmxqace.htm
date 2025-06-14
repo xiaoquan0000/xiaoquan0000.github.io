@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> </title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fafafa;
+      font-family: sans-serif;
+    }
+    #iframeContainer {
+      display: none;     
+      width: 100%;
+      height: 100%;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #message {
+      padding: 1rem;
+      font-size: 1rem;
+      color: #c00;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="message"></div>
+  <div id="iframeContainer">
+    <iframe id="contentFrame" src=""></iframe>
+  </div>
+
+  <script>
+    (function() {
+      const msgEl = document.getElementById('message');
+      const containerEl = document.getElementById('iframeContainer');
+      const iframeEl = document.getElementById('contentFrame');
+      const params = new URLSearchParams(window.location.search);
+
+      document.title = params.get('wybt') || '';
+      
+      const ovoParam = params.get('ovoxq');
+      if (!ovoParam) {
+        msgEl.textContent = '错误：缺少参数';
+        return;
+      }
+
+      function xiaoquan90Decode(wrappedHex) {
+        if (!/^xq[0-9A-Fa-f]+27$/.test(wrappedHex)) {
+          return null;
+        }
+        const hexStr = wrappedHex.slice(2, -2);
+        if (hexStr.length % 2 !== 0) {
+          return null;
+        }
+        let result = '';
+        for (let i = 0; i < hexStr.length; i += 2) {
+          const byteVal = parseInt(hexStr.substr(i, 2), 16);
+          const origCode = (byteVal - 90 + 256) % 256;
+          result += String.fromCharCode(origCode);
+        }
+        return result;
+      }
+
+      let targetUrl;
+      try {
+        const decoded = xiaoquan90Decode(ovoParam);
+        if (!decoded) throw new Error();
+        targetUrl = new URL(decoded);
+      } catch (e) {
+        msgEl.textContent = '错误：无法解析链接';
+        return;
+      }
+
+      iframeEl.src = targetUrl.href;
+      msgEl.style.display = 'none';
+      containerEl.style.display = 'block';
+    })();
+  </script>
+</body>
+</html>
